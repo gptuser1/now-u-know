@@ -25,13 +25,22 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Deploy with Wrangler
-        run: npx wrangler deploy --var OPENAI_API_KEY:"$OPENAI_API_KEY" --var OPENAI_BASE_URL:"$OPENAI_BASE_URL" --var OPENAI_MODEL:"$OPENAI_MODEL" --var D1_TOKEN:"$D1_TOKEN" --var TRIGGER_TOKEN:"$TRIGGER_TOKEN"
+      - name: Set secrets (encrypted)
+        run: |-
+          echo "$OPENAI_API_KEY" | npx wrangler secret put OPENAI_API_KEY
+          echo "$D1_TOKEN" | npx wrangler secret put D1_TOKEN
+          echo "$TRIGGER_TOKEN" | npx wrangler secret put TRIGGER_TOKEN
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_BASE_URL: ${{ secrets.OPENAI_BASE_URL }}
-          OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
           D1_TOKEN: ${{ secrets.D1_TOKEN }}
           TRIGGER_TOKEN: ${{ secrets.TRIGGER_TOKEN }}
+
+      - name: Deploy with Wrangler
+        run: npx wrangler deploy --var OPENAI_BASE_URL:"$OPENAI_BASE_URL" --var OPENAI_MODEL:"$OPENAI_MODEL"
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          OPENAI_BASE_URL: ${{ vars.OPENAI_BASE_URL }}
+          OPENAI_MODEL: ${{ vars.OPENAI_MODEL }}

@@ -13,8 +13,6 @@ crons = [
 
 
 [vars]
-OPENAI_API_KEY = ""
+# Plain text vars (secrets use wrangler secret put in CI)
 OPENAI_BASE_URL = ""
 OPENAI_MODEL = ""
-D1_TOKEN = ""
-TRIGGER_TOKEN = ""
