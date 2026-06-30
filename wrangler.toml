@@ -1,0 +1,20 @@
+name = "now-u-know"
+main = "src/index.ts"
+compatibility_date = "2024-06-20"
+
+# Run four times daily at 08:00, 12:00, 18:00, 22:00 UTC
+crons = [
+  "0 8 * * *",
+  "0 12 * * *",
+  "0 18 * * *",
+  "0 22 * * *"
+]
+
+[vars]
+OPENAI_MODEL = "deepseek-v4-flash-free"
+
+[env.production]
+# Override secrets via environment:
+# D1_TOKEN - D1 REST API Bearer Token
+# OPENAI_API_KEY - API Key
+# OPENAI_BASE_URL - API base URL

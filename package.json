@@ -1,0 +1,17 @@
+{
+  "name": "now-u-know",
+  "version": "1.0.0",
+  "description": "Daily info flow aggregator powered by Cloudflare",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "init-table": "node scripts/create-table.js"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240620.0",
+    "typescript": "^5.5.0",
+    "wrangler": "^3.60.0"
+  }
+}
