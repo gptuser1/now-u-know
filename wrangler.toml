@@ -3,6 +3,7 @@ main = "src/index.ts"
 compatibility_date = "2024-06-20"
 
 # Run four times daily at 08:00, 12:00, 18:00, 22:00 UTC
+[triggers]
 crons = [
   "0 8 * * *",
   "0 12 * * *",
