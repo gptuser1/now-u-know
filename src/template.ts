@@ -45,7 +45,7 @@ h1 small{font-size:0.8rem;color:#8b949e;font-weight:400}
 <h1>Now U Know <small>信息流</small></h1>
 <p class="sub">最近更新 · 每次抓取 AI 锐评</p>
 ${items.length > 0 ? cards : '<div class="empty">暂无内容，等待下次抓取...</div>'}
-<div class="footer">Powered by Cloudflare Workers + D1</div>
+<div class="footer">Powered by Cloudflare</div>
 </body>
 </html>`
 }
