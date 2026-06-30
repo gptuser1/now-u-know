@@ -62,7 +62,9 @@ function formatTime(iso: string): string {
   try {
     const d = new Date(iso)
     const pad = (n: number) => String(n).padStart(2, '0')
-    return `${d.getMonth() + 1}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+    // Convert UTC to CST (UTC+8)
+    const cst = new Date(d.getTime() + 8 * 60 * 60 * 1000)
+    return `${cst.getUTCMonth() + 1}/${pad(cst.getUTCDate())} ${pad(cst.getUTCHours())}:${pad(cst.getUTCMinutes())}`
   } catch {
     return iso
   }
