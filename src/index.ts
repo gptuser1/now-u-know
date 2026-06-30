@@ -11,7 +11,13 @@ export default {
     ctx.waitUntil(handleCron(env))
   },
 
-  async fetch(_request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    const url = new URL(request.url)
+
+    if (url.pathname === '/trigger') {
+      return handleTrigger(request, env, ctx)
+    }
+
     return handleGet(env)
   },
 }
@@ -76,5 +82,30 @@ async function handleGet(env: Env): Promise<Response> {
   const html = renderPage(items)
   return new Response(html, {
     headers: { 'Content-Type': 'text/html;charset=utf-8' },
+  })
+}
+
+function extractToken(request: Request): string | null {
+  const auth = request.headers.get('Authorization')
+  if (auth?.startsWith('Bearer ')) return auth.slice(7)
+
+  const url = new URL(request.url)
+  return url.searchParams.get('token')
+}
+
+async function handleTrigger(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  if (request.method !== 'POST') {
+    return new Response('Method not allowed', { status: 405 })
+  }
+
+  const token = extractToken(request)
+  if (!token || token !== env.TRIGGER_TOKEN) {
+    return new Response('Unauthorized', { status: 401 })
+  }
+
+  ctx.waitUntil(handleCron(env))
+
+  return new Response(JSON.stringify({ status: 'ok', message: 'Trigger accepted, cron running in background' }), {
+    headers: { 'Content-Type': 'application/json' },
   })
 }
