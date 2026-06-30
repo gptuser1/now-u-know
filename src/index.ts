@@ -69,7 +69,7 @@ async function handleGet(env: Env): Promise<Response> {
 
   const r = await sql(
     env.D1_TOKEN,
-    `SELECT * FROM items ORDER BY id DESC LIMIT 200`,
+    `SELECT * FROM items ORDER BY id DESC LIMIT 30`,
   )
   const items = (r.results as NewsItem[]) || []
 
