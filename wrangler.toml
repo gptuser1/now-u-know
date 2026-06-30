@@ -11,9 +11,3 @@ crons = [
   "0 22 * * *"
 ]
 
-[env.production]
-# Override secrets via environment:
-# D1_TOKEN - D1 REST API Bearer Token
-# OPENAI_API_KEY - API Key
-# OPENAI_BASE_URL - API base URL
-# TRIGGER_TOKEN - Token for POST /trigger manual cron
