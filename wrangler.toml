@@ -11,3 +11,10 @@ crons = [
   "0 22 * * *"
 ]
 
+
+[vars]
+OPENAI_API_KEY = ""
+OPENAI_BASE_URL = ""
+OPENAI_MODEL = ""
+D1_TOKEN = ""
+TRIGGER_TOKEN = ""

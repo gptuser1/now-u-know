@@ -26,7 +26,12 @@ jobs:
         run: npm install
 
       - name: Deploy with Wrangler
-        run: npx wrangler deploy
+        run: npx wrangler deploy --var OPENAI_API_KEY:"$OPENAI_API_KEY" --var OPENAI_BASE_URL:"$OPENAI_BASE_URL" --var OPENAI_MODEL:"$OPENAI_MODEL" --var D1_TOKEN:"$D1_TOKEN" --var TRIGGER_TOKEN:"$TRIGGER_TOKEN"
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_BASE_URL: ${{ secrets.OPENAI_BASE_URL }}
+          OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
+          D1_TOKEN: ${{ secrets.D1_TOKEN }}
+          TRIGGER_TOKEN: ${{ secrets.TRIGGER_TOKEN }}
