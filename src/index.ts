@@ -8,46 +8,66 @@ const KEEP_BATCHES = 9
 
 export default {
   async scheduled(_controller: ScheduledController, env: Env, ctx: ExecutionContext) {
-    ctx.waitUntil(handleCron(env))
+    const result = await handleCron(env)
+    if (!result.success) {
+      console.error('Scheduled cron failed:', result.error)
+    }
   },
 
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url)
 
     if (url.pathname === '/trigger') {
-      return handleTrigger(request, env, ctx)
+      return handleTrigger(request, env)
     }
 
     return handleGet(env)
   },
 }
 
-async function handleCron(env: Env) {
-  await ensureTable(env)
+interface CronResult {
+  success: boolean
+  articles_count: number
+  error?: string
+}
 
-  const now = new Date().toISOString()
-  const articles = await crawlAll()
+async function handleCron(env: Env): Promise<CronResult> {
+  try {
+    await ensureTable(env)
 
-  const summaries = await summarizeArticles(
-    env,
-    articles.map((a) => ({ title: a.title, source: a.source })),
-  )
+    const now = new Date().toISOString()
+    const articles = await crawlAll()
 
-  for (let i = 0; i < articles.length; i++) {
-    const a = articles[i]
-    await sql(
-      env.D1_TOKEN,
-      `INSERT INTO items (crawled_at, source, title, url, summary, category) VALUES (?, ?, ?, ?, ?, ?)`,
-      [now, a.source, a.title, a.url, summaries[i] || '', a.category],
+    if (articles.length === 0) {
+      return { success: true, articles_count: 0, error: 'No articles crawled' }
+    }
+
+    const summaries = await summarizeArticles(
+      env,
+      articles.map((a) => ({ title: a.title, source: a.source })),
     )
-  }
 
-  await cleanup(env)
+    for (let i = 0; i < articles.length; i++) {
+      const a = articles[i]
+      await sql(
+        env.D1_TOKEN,
+        `INSERT INTO newsfeed (crawled_at, source, title, url, summary, category) VALUES (?, ?, ?, ?, ?, ?)`,
+        [now, a.source, a.title, a.url, summaries[i] || '', a.category],
+      )
+    }
+
+    await cleanup(env)
+    return { success: true, articles_count: articles.length }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    console.error('handleCron failed:', msg)
+    return { success: false, articles_count: 0, error: msg }
+  }
 }
 
 async function ensureTable(env: Env) {
   await sql(env.D1_TOKEN, `
-    CREATE TABLE IF NOT EXISTS items (
+    CREATE TABLE IF NOT EXISTS newsfeed (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       crawled_at TEXT NOT NULL,
       source TEXT NOT NULL DEFAULT '',
@@ -63,8 +83,8 @@ async function cleanup(env: Env) {
   const keep = KEEP_BATCHES * 200
   await sql(
     env.D1_TOKEN,
-    `DELETE FROM items WHERE id NOT IN (
-      SELECT id FROM items ORDER BY id DESC LIMIT ?
+    `DELETE FROM newsfeed WHERE id NOT IN (
+      SELECT id FROM newsfeed ORDER BY id DESC LIMIT ?
     )`,
     [keep],
   )
@@ -75,7 +95,7 @@ async function handleGet(env: Env): Promise<Response> {
 
   const r = await sql(
     env.D1_TOKEN,
-    `SELECT * FROM items ORDER BY id DESC LIMIT 30`,
+    `SELECT * FROM newsfeed ORDER BY id DESC LIMIT 30`,
   )
   const items = (r.results as NewsItem[]) || []
 
@@ -93,7 +113,7 @@ function extractToken(request: Request): string | null {
   return url.searchParams.get('token')
 }
 
-async function handleTrigger(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+async function handleTrigger(request: Request, env: Env): Promise<Response> {
   if (request.method !== 'POST') {
     return new Response('Method not allowed', { status: 405 })
   }
@@ -103,9 +123,9 @@ async function handleTrigger(request: Request, env: Env, ctx: ExecutionContext):
     return new Response('Unauthorized', { status: 401 })
   }
 
-  ctx.waitUntil(handleCron(env))
+  const result = await handleCron(env)
 
-  return new Response(JSON.stringify({ status: 'ok', message: 'Trigger accepted, cron running in background' }), {
+  return new Response(JSON.stringify(result), {
     headers: { 'Content-Type': 'application/json' },
   })
 }
