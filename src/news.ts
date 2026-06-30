@@ -46,7 +46,7 @@ const HN_ITEM = 'https://hacker-news.firebaseio.com/v0/item'
 
 async function fetchHN(): Promise<RawArticle[]> {
   const ids: number[] = await (await fetch(HN_TOP)).json()
-  const top20 = ids.slice(0, 20)
+  const top20 = ids.slice(0, 10)
   const items = await Promise.all(
     top20.map(async (id) => {
       try {
@@ -71,7 +71,7 @@ async function fetchGHTrending(): Promise<RawArticle[]> {
     { headers: { 'User-Agent': 'Mozilla/5.0' } },
   )
   const data: { author: string; name: string; description: string; url: string }[] = await res.json()
-  return data.slice(0, 15).map((r) => ({
+  return data.slice(0, 10).map((r) => ({
     title: `${r.author}/${r.name}: ${r.description || ''}`,
     url: r.url,
   }))
@@ -81,7 +81,7 @@ async function fetchRSSSource(url: string): Promise<RawArticle[]> {
   try {
     const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } })
     const xml = await res.text()
-    return parseRSS(xml).slice(0, 10)
+    return parseRSS(xml).slice(0, 5)
   } catch {
     return []
   }

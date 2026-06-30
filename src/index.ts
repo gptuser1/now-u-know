@@ -47,14 +47,17 @@ async function handleCron(env: Env): Promise<CronResult> {
       articles.map((a) => ({ title: a.title, source: a.source })),
     )
 
+    const placeholders = articles.map(() => '(?, ?, ?, ?, ?, ?)').join(', ')
+    const values: string[] = []
     for (let i = 0; i < articles.length; i++) {
       const a = articles[i]
-      await sql(
-        env.D1_TOKEN,
-        `INSERT INTO newsfeed (crawled_at, source, title, url, summary, category) VALUES (?, ?, ?, ?, ?, ?)`,
-        [now, a.source, a.title, a.url, summaries[i] || '', a.category],
-      )
+      values.push(now, a.source, a.title, a.url, summaries[i] || '', a.category)
     }
+    await sql(
+      env.D1_TOKEN,
+      `INSERT INTO newsfeed (crawled_at, source, title, url, summary, category) VALUES ${placeholders}`,
+      values,
+    )
 
     await cleanup(env)
     return { success: true, articles_count: articles.length }
