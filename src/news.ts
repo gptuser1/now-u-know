@@ -65,8 +65,9 @@ async function fetchHN(): Promise<RawArticle[]> {
 }
 
 async function fetchGHTrending(): Promise<RawArticle[]> {
+  // Uses unofficial GitHub Trending API (community-maintained proxy)
   const res = await fetch(
-    'https://api.gitterapp.com/repositories?since=daily&lang=',
+    'https://ghapi.huchen.dev/repositories?since=daily',
     { headers: { 'User-Agent': 'Mozilla/5.0' } },
   )
   const data: { author: string; name: string; description: string; url: string }[] = await res.json()
@@ -103,9 +104,9 @@ const SOURCES: Source[] = [
     fetch: () => fetchRSSSource('https://feeds.bbci.co.uk/news/rss.xml'),
   },
   {
-    name: 'Reuters',
+    name: 'NPR',
     category: 'world',
-    fetch: () => fetchRSSSource('https://www.reutersagency.com/feed/'),
+    fetch: () => fetchRSSSource('https://feeds.npr.org/1001/rss.xml'),
   },
   {
     name: 'TechCrunch',
@@ -113,14 +114,24 @@ const SOURCES: Source[] = [
     fetch: () => fetchRSSSource('https://techcrunch.com/feed/'),
   },
   {
+    name: 'The Verge',
+    category: 'tech',
+    fetch: () => fetchRSSSource('https://www.theverge.com/rss/index.xml'),
+  },
+  {
+    name: 'Wired',
+    category: 'tech',
+    fetch: () => fetchRSSSource('https://www.wired.com/feed/rss'),
+  },
+  {
     name: '36氪',
     category: 'business',
     fetch: () => fetchRSSSource('https://36kr.com/feed'),
   },
   {
-    name: '虎嗅',
-    category: 'business',
-    fetch: () => fetchRSSSource('https://www.huxiu.com/rss/0.xml'),
+    name: '少数派',
+    category: 'tech',
+    fetch: () => fetchRSSSource('https://sspai.com/feed'),
   },
 ]
 

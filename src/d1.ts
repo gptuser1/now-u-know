@@ -1,4 +1,4 @@
-const D1_BASE = 'https://data.klinux.dpdns.org'
+const D1_BASE = 'https://ocean.klinux.dpdns.org'
 
 interface QueryResult {
   success: boolean
