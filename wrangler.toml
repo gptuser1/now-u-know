@@ -11,9 +11,6 @@ crons = [
   "0 22 * * *"
 ]
 
-[vars]
-OPENAI_MODEL = "deepseek-v4-flash-free"
-
 [env.production]
 # Override secrets via environment:
 # D1_TOKEN - D1 REST API Bearer Token
