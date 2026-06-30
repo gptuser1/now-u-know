@@ -45,7 +45,7 @@ function parseSummaries(raw: string, articleCount: number): Map<number, string> 
   try {
     // Try to extract JSON object from the response (handles markdown code fences too)
     let jsonStr = raw.trim()
-    const fenceMatch = jsonStr.match(/\`\`\`(?:json)?\n?([\s\S]*?)\`\`\`/)
+    const fenceMatch = jsonStr.match(/```(?:json)?\n?([\s\S]*?)```/)
     if (fenceMatch) jsonStr = fenceMatch[1].trim()
 
     const parsed = JSON.parse(jsonStr)
@@ -66,7 +66,7 @@ function parseSummaries(raw: string, articleCount: number): Map<number, string> 
 
   // Attempt 2: numbered line parsing "1: xxx" or "1. xxx"
   for (const line of raw.split('\n')) {
-    const match = line.trim().match(/^(\d+)[:\.\、\s]\s*(.+)/)
+    const match = line.trim().match(/^(\d+)[:.\、\s]\s*(.+)/)
     if (match) {
       const idx = parseInt(match[1]) - 1
       const text = match[2].trim()
@@ -87,10 +87,10 @@ export async function summarizeArticles(
 
   const messages = buildPrompt(articles)
 
-  const res = await fetch(\`\${env.OPENAI_BASE_URL}/chat/completions\`, {
+  const res = await fetch(`${env.OPENAI_BASE_URL}/chat/completions`, {
     method: 'POST',
     headers: {
-      Authorization: \`Bearer \${env.OPENAI_API_KEY}\`,
+      Authorization: `Bearer ${env.OPENAI_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -103,7 +103,7 @@ export async function summarizeArticles(
 
   if (!res.ok) {
     const body = await res.text()
-    throw new Error(\`LLM error (\${res.status}): \${body}\`)
+    throw new Error(`LLM error (${res.status}): ${body}`)
   }
 
   const data: ChatResponse = await res.json()
