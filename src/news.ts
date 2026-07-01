@@ -21,7 +21,7 @@ function parseRSS(xml: string): RawArticle[] {
   while ((m = itemRegex.exec(xml)) !== null) {
     const block = m[1]
     let title =
-      block.match(/<title[^>]*><![CDATA\[(.*?)\]\]><\/title>/i)?.[1] ||
+      block.match(/<title[^>]*><!\[CDATA\[(.*?)\]\]><\/title>/i)?.[1] ||
       block.match(/<title[^>]*>(.*?)<\/title>/i)?.[1] ||
       ''
     title = stripCDATA(title)
@@ -37,7 +37,7 @@ function parseRSS(xml: string): RawArticle[] {
     while ((m = entryRegex.exec(xml)) !== null) {
       const block = m[1]
       let title =
-        block.match(/<title[^>]*><![CDATA\[(.*?)\]\]><\/title>/i)?.[1] ||
+        block.match(/<title[^>]*><!\[CDATA\[(.*?)\]\]><\/title>/i)?.[1] ||
         block.match(/<title[^>]*>(.*?)<\/title>/i)?.[1] ||
         ''
       title = stripCDATA(title)
