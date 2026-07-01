@@ -9,32 +9,44 @@ interface Source {
   fetch(): Promise<RawArticle[]>
 }
 
+/** Remove CDATA markers and trim */
+function stripCDATA(s: string): string {
+  return s.replace(/^\s*<!\[CDATA\[(.*)\]\]>\s*$/s, '$1').trim()
+}
+
 function parseRSS(xml: string): RawArticle[] {
   const items: RawArticle[] = []
   const itemRegex = /<item>([\s\S]*?)<\/item>/gi
   let m: RegExpExecArray | null
   while ((m = itemRegex.exec(xml)) !== null) {
     const block = m[1]
-    const title =
-      block.match(/<title[^>]*><!\[CDATA\[(.*?)\]\]><\/title>/i)?.[1] ||
+    let title =
+      block.match(/<title[^>]*><![CDATA\[(.*?)\]\]><\/title>/i)?.[1] ||
       block.match(/<title[^>]*>(.*?)<\/title>/i)?.[1] ||
       ''
-    const link =
-      block.match(/<link[^>]*>(.*?)<\/link>/i)?.[1] || ''
-    if (title && link) items.push({ title: title.trim(), url: link.trim() })
+    title = stripCDATA(title)
+    let link =
+      block.match(/<link[^>]*>(.*?)<\/link>/i)?.[1] ||
+      ''
+    link = stripCDATA(link)
+    if (title && link) items.push({ title, url: link })
   }
 
   if (items.length === 0) {
     const entryRegex = /<entry>([\s\S]*?)<\/entry>/gi
     while ((m = entryRegex.exec(xml)) !== null) {
       const block = m[1]
-      const title =
-        block.match(/<title[^>]*>(.*?)<\/title>/i)?.[1] || ''
-      const link =
+      let title =
+        block.match(/<title[^>]*><![CDATA\[(.*?)\]\]><\/title>/i)?.[1] ||
+        block.match(/<title[^>]*>(.*?)<\/title>/i)?.[1] ||
+        ''
+      title = stripCDATA(title)
+      let link =
         block.match(/<link[^>]*href\s*=\s*["']([^"']+)["']/i)?.[1] ||
         block.match(/<link[^>]*>(.*?)<\/link>/i)?.[1] ||
         ''
-      if (title && link) items.push({ title: title.trim(), url: link.trim() })
+      link = stripCDATA(link)
+      if (title && link) items.push({ title, url: link })
     }
   }
 
@@ -65,7 +77,6 @@ async function fetchHN(): Promise<RawArticle[]> {
 }
 
 async function fetchGHTrending(): Promise<RawArticle[]> {
-  // Uses unofficial GitHub Trending API (community-maintained proxy)
   const res = await fetch(
     'https://ghapi.huchen.dev/repositories?since=daily',
     { headers: { 'User-Agent': 'Mozilla/5.0' } },
@@ -135,6 +146,12 @@ const SOURCES: Source[] = [
   },
 ]
 
+/** Filter out titles that are empty or only punctuation */
+function isValidTitle(s: string): boolean {
+  const cleaned = s.replace(/[，。、！？：；""''《》（）【】\[\]{}!?,.:;'"()\s\-—–·…]+/g, '').trim()
+  return cleaned.length > 0
+}
+
 export async function crawlAll(): Promise<
   { source: string; category: string; title: string; url: string }[]
 > {
@@ -142,12 +159,15 @@ export async function crawlAll(): Promise<
     SOURCES.map(async (s) => {
       try {
         const articles = await s.fetch()
-        return articles.map((a) => ({
-          source: s.name,
-          category: s.category,
-          title: a.title,
-          url: a.url,
-        }))
+        // Filter out invalid titles
+        return articles
+          .filter(a => isValidTitle(a.title))
+          .map((a) => ({
+            source: s.name,
+            category: s.category,
+            title: a.title,
+            url: a.url,
+          }))
       } catch {
         return []
       }
