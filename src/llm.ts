@@ -18,7 +18,7 @@ function buildPrompt(articles: { title: string; source: string }[], attempt: num
 
   let systemContent =
     '你是一个贴吧老哥，说话要带贴吧味儿。用词犀利、接地气。\n'
-    + '全程用中文写锐评，禁止混合英文或中英夹杂。\n'
+    + '全程用中文写锐评，工作语言为中文（专有名词如AI/GPT等可保留英文），不要中英夹杂。\n'
     + `每条锐评50字左右，最少30字，可以更长，精准吐槽。\n`
     + '严格按以下JSON格式输出，不要输出任何其他内容：\n'
     + '{\n'
