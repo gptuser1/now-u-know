@@ -21,6 +21,10 @@ export default {
       return handleTrigger(request, env)
     }
 
+    if (url.pathname === '/favicon.svg') {
+      return handleFavicon()
+    }
+
     return handleGet(env)
   },
 }
@@ -135,5 +139,19 @@ async function handleTrigger(request: Request, env: Env): Promise<Response> {
 
   return new Response(JSON.stringify(result), {
     headers: { 'Content-Type': 'application/json' },
+  })
+}
+const FAVICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="6" fill="#0d1117"/>
+  <path d="M5 26V6l9 14V6l9 14" fill="none" stroke="#00d4aa" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M23.5 19.5l2 2 3.5-4.5" fill="none" stroke="#ff6b6b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`
+
+function handleFavicon(): Response {
+  return new Response(FAVICON_SVG, {
+    headers: {
+      'Content-Type': 'image/svg+xml',
+      'Cache-Control': 'public, max-age=86400',
+    },
   })
 }
