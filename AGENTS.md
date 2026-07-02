@@ -49,3 +49,4 @@ Hacker News（10条）、GitHub Trending（10条）、BBC（5条）、NPR（5条
 - RSS/Atom 解析处理 CDATA 标记，过滤无效标题
 - 时间戳页面显示为 CST (UTC+8)
 - HTML 实体解码 decodeHTMLEntities() 处理标题中的 &amp; &#39; &rsquo; 等实体
+- 去重：每次 cron 先查 D1 已有 source+title 组合，同源同标题不再重复插入

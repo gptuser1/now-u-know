@@ -46,19 +46,39 @@ async function handleCron(env: Env): Promise<CronResult> {
       return { success: true, articles_count: 0, error: 'No articles crawled' }
     }
 
+    // Dedup: skip articles already in D1 (same source + title)
+    const r = await sql(env.D1_TOKEN, `SELECT DISTINCT source, title FROM newsfeed`)
+    const existing = new Set<string>()
+    for (const row of (r.results || []) as { source: string; title: string }[]) {
+      existing.add(`${row.source}||${row.title}`)
+    }
+
+    // Also dedup within current batch (same cron, same title+source)
+    const seen = new Set<string>()
+    const unique = articles.filter((a) => {
+      const key = `${a.source}||${a.title}`
+      if (existing.has(key) || seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+
+    if (unique.length === 0) {
+      return { success: true, articles_count: 0, error: 'All articles already exist' }
+    }
+
     const summaries = await summarizeArticles(
       env,
-      articles.map((a) => ({ title: a.title, source: a.source })),
+      unique.map((a) => ({ title: a.title, source: a.source })),
     )
 
     const CHUNK_SIZE = 15
-    for (let i = 0; i < articles.length; i += CHUNK_SIZE) {
-      const chunkEnd = Math.min(i + CHUNK_SIZE, articles.length)
+    for (let i = 0; i < unique.length; i += CHUNK_SIZE) {
+      const chunkEnd = Math.min(i + CHUNK_SIZE, unique.length)
       const placeholders: string[] = []
       const values: string[] = []
       for (let j = i; j < chunkEnd; j++) {
         placeholders.push('(?, ?, ?, ?, ?, ?)')
-        const a = articles[j]
+        const a = unique[j]
         values.push(now, a.source, a.title, a.url, summaries[j] || '', a.category)
       }
       await sql(
@@ -69,7 +89,7 @@ async function handleCron(env: Env): Promise<CronResult> {
     }
 
     await cleanup(env)
-    return { success: true, articles_count: articles.length }
+    return { success: true, articles_count: unique.length }
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)
     console.error('handleCron failed:', msg)
