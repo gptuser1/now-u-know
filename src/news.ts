@@ -14,6 +14,39 @@ function stripCDATA(s: string): string {
   return s.replace(/^\s*<!\[CDATA\[(.*)\]\]>\s*$/s, '$1').trim()
 }
 
+/** Decode HTML entities in a string */
+function decodeHTMLEntities(s: string): string {
+  const map: Record<string, string> = {
+    '&quot;': '"',
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&apos;': "'",
+    '&nbsp;': ' ',
+    '&ndash;': '–',
+    '&mdash;': '—',
+    '&lsquo;': '‘',
+    '&rsquo;': '’',
+    '&ldquo;': '“',
+    '&rdquo;': '”',
+    '&hellip;': '…',
+    '&laquo;': '«',
+    '&raquo;': '»',
+    '&bull;': '•',
+    '&middot;': '·',
+  }
+  return s.replace(/&[#\w]+;/g, (match) => {
+    if (map[match]) return map[match]
+    if (match.startsWith('&#x')) {
+      return String.fromCharCode(parseInt(match.slice(3, -1), 16))
+    }
+    if (match.startsWith('&#')) {
+      return String.fromCharCode(parseInt(match.slice(2, -1), 10))
+    }
+    return match
+  })
+}
+
 function parseRSS(xml: string): RawArticle[] {
   const items: RawArticle[] = []
   const itemRegex = /<item>([\s\S]*?)<\/item>/gi
@@ -24,7 +57,7 @@ function parseRSS(xml: string): RawArticle[] {
       block.match(/<title[^>]*><!\[CDATA\[(.*?)\]\]><\/title>/i)?.[1] ||
       block.match(/<title[^>]*>(.*?)<\/title>/i)?.[1] ||
       ''
-    title = stripCDATA(title)
+    title = decodeHTMLEntities(stripCDATA(title))
     let link =
       block.match(/<link[^>]*>(.*?)<\/link>/i)?.[1] ||
       ''
@@ -40,7 +73,7 @@ function parseRSS(xml: string): RawArticle[] {
         block.match(/<title[^>]*><!\[CDATA\[(.*?)\]\]><\/title>/i)?.[1] ||
         block.match(/<title[^>]*>(.*?)<\/title>/i)?.[1] ||
         ''
-      title = stripCDATA(title)
+      title = decodeHTMLEntities(stripCDATA(title))
       let link =
         block.match(/<link[^>]*href\s*=\s*["']([^"']+)["']/i)?.[1] ||
         block.match(/<link[^>]*>(.*?)<\/link>/i)?.[1] ||
@@ -159,8 +192,9 @@ export async function crawlAll(): Promise<
     SOURCES.map(async (s) => {
       try {
         const articles = await s.fetch()
-        // Filter out invalid titles
+        // Decode HTML entities then filter out invalid titles
         return articles
+          .map(a => ({ ...a, title: decodeHTMLEntities(a.title) }))
           .filter(a => isValidTitle(a.title))
           .map((a) => ({
             source: s.name,
