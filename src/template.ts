@@ -1,4 +1,5 @@
 import type { NewsItem } from './types'
+import { decodeHTMLEntities } from './news'
 
 export function renderPage(items: NewsItem[]): string {
   const cards = items
@@ -10,7 +11,7 @@ export function renderPage(items: NewsItem[]): string {
         <span class="cat">${esc(item.category)}</span>
         <span class="time">${formatTime(item.crawled_at)}</span>
       </div>
-      <a href="${esc(item.url)}" target="_blank" rel="noopener" class="title">${esc(item.title)}</a>
+      <a href="${esc(item.url)}" target="_blank" rel="noopener" class="title">${esc(decodeHTMLEntities(item.title))}</a>
       ${item.summary ? `<p class="summary">${esc(item.summary)}</p>` : ''}
     </div>`,
     )

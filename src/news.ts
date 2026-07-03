@@ -15,7 +15,7 @@ function stripCDATA(s: string): string {
 }
 
 /** Decode HTML entities in a string */
-function decodeHTMLEntities(s: string): string {
+export function decodeHTMLEntities(s: string): string {
   const map: Record<string, string> = {
     '&quot;': '"',
     '&amp;': '&',
