@@ -4,7 +4,8 @@ import { crawlAll } from './news'
 import { summarizeArticles } from './llm'
 import { renderPage } from './template'
 
-const KEEP_BATCHES = 9
+// Keep 2x the displayed count (site shows 30, so keep 60)
+const KEEP_LIMIT = 60
 
 export default {
   async scheduled(_controller: ScheduledController, env: Env, ctx: ExecutionContext) {
@@ -112,13 +113,12 @@ async function ensureTable(env: Env) {
 }
 
 async function cleanup(env: Env) {
-  const keep = KEEP_BATCHES * 200
   await sql(
     env.D1_TOKEN,
     `DELETE FROM newsfeed WHERE id NOT IN (
       SELECT id FROM newsfeed ORDER BY id DESC LIMIT ?
     )`,
-    [keep],
+    [KEEP_LIMIT],
   )
 }
 
